@@ -29,7 +29,7 @@ public class Main {
 
         try {
             DBAgent dbAgent = new DBAgent(dbHost, dbName, dbLogin, dbPassword);
-            MainController mainController = new MainController(dbAgent, fileAgentStorage, fileAgentInmedia, fileAgentD);
+            MainController mainController = new MainController(dbAgent, /*fileAgentStorage, fileAgentInmedia, */fileAgentD);
         } catch (SQLException e) {
             System.out.println(e.getLocalizedMessage());
             if (e.getCause() != null)

@@ -54,9 +54,32 @@ public class FileFinder {
         return deletedFiles;
     }
 
-    public List<Row_file_names> getNewFilesInDir(){
-        List<Row_file_names> newFiles = getExistingFilesInDirInDB(dbAgent);
+    public List<File> getNewFilesInDir(){
+        // Получаем список существующих файлов в директории и смотрим, есть ли файлы, которые по имени
+        // и дате создания не соответствуют ни одному файлу из базы данных из той же дериктории
+
+        if(existingFilesInDir == null)
+            return null;   // нет доступа к директории - выходим
+
+        List<Row_file_names> existingFilesInDB = getExistingFilesInDirInDB(dbAgent);
+        List<File> newFiles = new ArrayList<>();
+
+        boolean find;
+
+        for (File currentFileInDir : existingFilesInDir) {
+            find = false;
+            for (Row_file_names currentFileInDB : existingFilesInDB) {
+                if((currentFileInDB.getDate_create() == currentFileInDir.lastModified()) && (currentFileInDB.getFile_name().equals(currentFileInDir.getName()))){
+                    find = true;
+                    break;
+                }
+            }
+            if(!find){
+                newFiles.add(currentFileInDir);
+            }
+        }
         return newFiles;
+
     }
 
     // получим из БД список всех когда либо существовавших файлов в заданой папке
