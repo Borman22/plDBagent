@@ -7,12 +7,12 @@ import java.io.File;
 import java.sql.*;
 import java.util.Map;
 
-public class DBAgent {
+public class DBConnector {
     private Connection connection = null;
     private Statement statement = null;
     private String settings = "?serverTimezone=UTC&useSSL=false";
 
-    public DBAgent(String hostPort, String dbName, String login, String password) throws SQLException {
+    public DBConnector(String hostPort, String dbName, String login, String password) throws SQLException {
         if (connection != null && !connection.isClosed()) {
             throw new SQLException("Соединение с базой данных уже установлено." +
                     "Чтобы установить новое соединение, сначала необходимо закрыть текущее");
@@ -42,12 +42,11 @@ public class DBAgent {
     }
 
     public ResultSet executeQuery(String query) throws SQLException { // пока сделаем так. потом переделаем по человечески
-        ResultSet rs = statement.executeQuery(query);
-        return rs;
+        return statement.executeQuery(query);
     }
 
-    public int executeUpdate(String query) throws SQLException { // пока сделаем так. потом переделаем по человечески
-        return statement.executeUpdate(query);
+    public void executeUpdate(String query) throws SQLException { // пока сделаем так. потом переделаем по человечески
+        statement.executeUpdate(query);
     }
 
 

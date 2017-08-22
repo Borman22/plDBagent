@@ -7,11 +7,13 @@ package tv.sonce.pldbagent.model;
 import java.io.File;
 
 public class FileAgent {
+    private final String pathToDir;
+    private final String pathToDirForQuery;
     private File[] folderEntries = null;
-    private String pathToDir;
 
     public FileAgent(String pathToDir){
         this.pathToDir = pathToDir;
+        this.pathToDirForQuery = "\'" + pathToDir.replace("\\", "\\\\")+ "\'";
         folderEntries = new File(pathToDir).listFiles();
     }
 
@@ -21,6 +23,10 @@ public class FileAgent {
 
     public String getPathToDir(){
         return pathToDir;
+    }
+
+    public String getPathToDirForQuery(){
+        return pathToDirForQuery;
     }
 
 }

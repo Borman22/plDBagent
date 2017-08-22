@@ -4,10 +4,9 @@ package tv.sonce.pldbagent;
  */
 
 import tv.sonce.pldbagent.controller.MainController;
-import tv.sonce.pldbagent.model.DBAgent;
+import tv.sonce.pldbagent.model.DBConnector;
 import tv.sonce.pldbagent.model.FileAgent;
 
-import java.io.File;
 import java.sql.SQLException;
 
 public class Main {
@@ -28,8 +27,8 @@ public class Main {
         FileAgent fileAgentD = new FileAgent(pathToD);
 
         try {
-            DBAgent dbAgent = new DBAgent(dbHost, dbName, dbLogin, dbPassword);
-            MainController mainController = new MainController(dbAgent, /*fileAgentStorage, fileAgentInmedia, */fileAgentD);
+            DBConnector dbConnector = new DBConnector(dbHost, dbName, dbLogin, dbPassword);
+            MainController mainController = new MainController(dbConnector/*, fileAgentStorage, fileAgentInmedia*/, fileAgentD);
         } catch (SQLException e) {
             System.out.println(e.getLocalizedMessage());
             if (e.getCause() != null)

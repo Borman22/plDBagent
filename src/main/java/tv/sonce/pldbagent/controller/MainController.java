@@ -1,7 +1,7 @@
 package tv.sonce.pldbagent.controller;
 
 import tv.sonce.pldbagent.Main;
-import tv.sonce.pldbagent.model.DBAgent;
+import tv.sonce.pldbagent.model.DBConnector;
 import tv.sonce.pldbagent.model.FileAgent;
 import tv.sonce.pldbagent.model.tables.Row_file_names;
 
@@ -17,12 +17,12 @@ import java.util.Set;
  */
 
 public class MainController {
-    FileAgent [] fileAgents;
-    DBAgent dbAgent;
+    private FileAgent[] fileAgents;
+    private DBConnector dbConnector;
 
-    public MainController(DBAgent dbAgent, FileAgent... fileAgents) {
+    public MainController(DBConnector dbConnector, FileAgent... fileAgents) {
 
-        this.dbAgent = dbAgent;
+        this.dbConnector = dbConnector;
         this.fileAgents = fileAgents;
 
         // Прямо из конструктора вызываем все необходимые действия
@@ -38,37 +38,53 @@ public class MainController {
     }
 
     private void processAllNewFiles() {
-        // получаем список созданных файлов - модифицируем БД, получаем список созданных файлов в другой папке - модифицируем БД...
-        for (int i = 0; i < fileAgents.length; i++) {
-            FileFinder tempFileFinder = new FileFinder(fileAgents[i], dbAgent);
+        FileParser fileParser = new FileParser();
+
+
+        // получаем список новых файлов в каждой папке по очереди - модифицируем БД, анализируем файл, добавляем события в БД. Переходим к след. файлу
+        for (FileAgent fileAgent : fileAgents) {  // проходимся по всем папкам, где лежат сохраненные плейлисты
+            FileFinder tempFileFinder = new FileFinder(fileAgent, dbConnector);
             List<File> newFiles = tempFileFinder.getNewFilesInDir();
-            FileParser fileParser = new FileParser();
+
+            // получим ID, под которым хранится в БД путь к данной папке
+            int id_path = -1;
+            try {
+                ResultSet rs = dbConnector.executeQuery("SELECT id FROM path WHERE path = " + fileAgent.getPathToDirForQuery());
+                if (rs.next()) {
+                    id_path = rs.getInt("id");
+                }
+
+            } catch (SQLException e) {
+                System.out.println("Не удалось получить из БД id, под которым сохранен путь к папке, где лежит данный файл " + fileAgent.getPathToDir());
+                System.out.println(e.getLocalizedMessage());
+            }
+
+            // надо добавить файл в БД и получить его id, чтобы потом использовать в запросах
+            int id_file_names;
+
             if (newFiles != null) {
-                System.out.println("Количество новых файлов в папке " + fileAgents[i].getPathToDir() + " равно:" + newFiles.size());
-                // Сначала надо распарсить новые файлы
-    int j = 0;
-//                for (int j = 0; j < newFiles.size(); j++) {
-                    List<FileParser.Event> parseredFile = fileParser.parse(newFiles.get(j));
-//                    if(parseredFile == null)
-//                        continue;
-                // Теперь надо каждое событие из каждого файла сравнить с БД и если есть новая инфа - добавить ее в БД
-                    DBWriter.addEventsFromNewFile(parseredFile, dbAgent, fileAgents[i].getPathToDir());
+                System.out.println("Количество новых файлов в папке " + fileAgent.getPathToDir() + " равно:" + newFiles.size());
+
+                // Надо распарсить каждый новый файл и добавить из него каждое событие в БД
+                for (File newFile : newFiles) { // проходимся по каждому файлу (плейлисту)
+                    id_file_names = DBAgentUtil.addNewFile(newFile, fileAgent, dbConnector, id_path);
+                    System.out.println("id_file_names = " + id_file_names);
+                    if (id_file_names < 0) {
+                        System.out.println("Не удалось найти в БД такой файл и не удалось его туда добавить: " + newFile.getName());
+                    }
+
+                    List<FileParser.Event> parseredFile = fileParser.parse(newFile);
+                    if (parseredFile == null) // Не удалось распарсить или формат не .xml
+                        continue;
+
+                    // Теперь надо каждое событие из каждого файла сравнить с БД и если есть новая инфа - добавить ее в БД
+                    DBAgentUtil.addAllEventsFromNewFile(parseredFile, dbConnector, id_file_names);
 
 
-                // Теперь надо добавить этот файл в БД, чтобы больше его не парсить при следующем запуске
-                    DBWriter.addNewFile(fileAgents[i], dbAgent);
-//                    String query = "UPDATE file_names SET date_delete = " + Main.currentDate + " WHERE id = " + newFiles.get(j).getId_pk();
-//                    try {
-//                        dbAgent.executeUpdate(query);
-//                    } catch (SQLException e) {
-//                        System.out.println("Не удалось в БД пометить файлы, как удаленные. Query = " + query);
-//                        System.out.println(e.getLocalizedMessage());
-//                    }
-//                    System.out.println(newFiles.get(j));
-//                }
+                }
 
             } else {
-                System.out.println("Не могу получить доступ к папке " + fileAgents[i].getPathToDir());
+                System.out.println("Не могу получить доступ к папке " + fileAgent.getPathToDir());
             }
         }
     }
@@ -81,8 +97,8 @@ public class MainController {
         }
 
         try {
-            ResultSet rs = dbAgent.executeQuery("SELECT path FROM path");
-            while (rs.next()){
+            ResultSet rs = dbConnector.executeQuery("SELECT path FROM path");
+            while (rs.next()) {
                 oldPathList.add(rs.getString("path"));
             }
         } catch (SQLException e) {
@@ -92,10 +108,10 @@ public class MainController {
         }
 
         currentPathList.removeAll(oldPathList); // Отнимем от нового списка старый и получим разницу. Ее добавим в БД
-        if(currentPathList.size() != 0){
-            for(String tempPath : currentPathList){
+        if (currentPathList.size() != 0) {
+            for (String tempPath : currentPathList) {
                 try {
-                    dbAgent.executeUpdate("INSERT INTO path (path) VALUES (\'" + tempPath.replace("\\", "\\\\")+ "\')");
+                    dbConnector.executeUpdate("INSERT INTO path (path) VALUES (\'" + tempPath.replace("\\", "\\\\") + "\')");
                 } catch (SQLException e) {
                     System.out.println("Не удалось добавить новый путь в БД");
                     System.out.println(e.getLocalizedMessage());
@@ -104,29 +120,27 @@ public class MainController {
         }
 
 
-
-
     }
 
     private void processAllDeletedFiles() {
         // получаем список удаленных файлов - модифицируем БД, получаем список удаленных файлов в другой папке - модифицируем ДБ...
-        for (int i = 0; i < fileAgents.length; i++) {
-            FileFinder tempFileFinder = new FileFinder(fileAgents[i], dbAgent);
+        for (FileAgent fileAgent : fileAgents) {
+            FileFinder tempFileFinder = new FileFinder(fileAgent, dbConnector);
             List<Row_file_names> deletedFiles = tempFileFinder.getDeletedFilesInDir();
             if (deletedFiles != null) {
-                System.out.println("Количество файлов, которые удалены из папки " + fileAgents[i].getPathToDir() + " равно:" + deletedFiles.size());
-                for (int j = 0; j < deletedFiles.size(); j++) {
-                    String query = "UPDATE file_names SET date_delete = " + Main.currentDate + " WHERE id = " + deletedFiles.get(j).getId_pk();
+                System.out.println("Количество файлов, которые удалены из папки " + fileAgent.getPathToDir() + " равно:" + deletedFiles.size());
+                for (Row_file_names deletedFile : deletedFiles) {
+                    String query = "UPDATE file_names SET date_delete = " + Main.currentDate + " WHERE id = " + deletedFile.getId_pk();
                     try {
-                        dbAgent.executeUpdate(query);
+                        dbConnector.executeUpdate(query);
                     } catch (SQLException e) {
                         System.out.println("Не удалось в БД пометить файлы, как удаленные. Query = " + query);
                         System.out.println(e.getLocalizedMessage());
                     }
-                    System.out.println(deletedFiles.get(j));
+                    System.out.println(deletedFile);
                 }
-            } else{
-                System.out.println("Не могу получить доступ к папке " + fileAgents[i].getPathToDir());
+            } else {
+                System.out.println("Не могу получить доступ к папке " + fileAgent.getPathToDir());
             }
         }
     }

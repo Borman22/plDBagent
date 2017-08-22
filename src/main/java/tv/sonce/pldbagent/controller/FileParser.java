@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -20,9 +21,9 @@ import org.xml.sax.SAXException;
  * Этот класс занимается валидацией и парсингом файлов
  */
 
-public class FileParser {
+class FileParser {
 
-    public List<Event> parse(File file) {
+    List<Event> parse(File file) {
         // 1. Валидация файла
         if(!file.getName().endsWith(".xml"))
             return null;
@@ -56,14 +57,26 @@ public class FileParser {
             tempTimeStr = curentElement.getElementsByTagName("time").item(0).getChildNodes().item(0).getNodeValue().trim();
             tempDurationStr = curentElement.getElementsByTagName("duration").item(0).getChildNodes().item(0).getNodeValue().trim();
             tempAsset_idStr = curentElement.getElementsByTagName("asset_id").item(0).getChildNodes().item(0).getNodeValue().trim();
-            tempEventNameStr = curentElement.getElementsByTagName("name").item(0).getChildNodes().item(0).getNodeValue().trim();
+            tempEventNameStr = curentElement.getElementsByTagName("name").item(0).getChildNodes().item(0).getNodeValue().trim().replace('\'', ' ');
             tempFormatStr = curentElement.getElementsByTagName("format").item(0).getChildNodes().item(0).getNodeValue().trim();
 
             if(curentElement.getElementsByTagName("tc_in").item(0) == null) tempTcInStr = null;
-            else tempTcInStr = curentElement.getElementsByTagName("tc_in").item(0).getChildNodes().item(0).getNodeValue().trim();
+            else {
+                if(curentElement.getElementsByTagName("tc_in").item(0).getChildNodes().item(0) == null)
+                    tempTcInStr = null;
+                else
+                    tempTcInStr = curentElement.getElementsByTagName("tc_in").item(0).getChildNodes().item(0).getNodeValue().trim().substring(0,11);
+            }
+
 
             if(curentElement.getElementsByTagName("tc_out").item(0) == null) tempTcOutStr = null;
-            else tempTcOutStr = curentElement.getElementsByTagName("tc_out").item(0).getChildNodes().item(0).getNodeValue().trim();
+            else {
+                if(curentElement.getElementsByTagName("tc_out").item(0).getChildNodes().item(0) == null)
+                    tempTcOutStr = null;
+                else
+                    tempTcOutStr = curentElement.getElementsByTagName("tc_out").item(0).getChildNodes().item(0).getNodeValue().trim().substring(0,11);
+            }
+
 
             // 4. Приведение значений каждого поля к нужному виду
             int tempDate, tempTime, tempTcIn, tempTcOut, tempDuration, tempAsset_id;
@@ -104,7 +117,7 @@ public class FileParser {
         int tcIn;
         int tcOut;
 
-        public Event(int date, int time, int duration, int asset_id, String eventName, String [] format, int tcIn, int tcOut) {
+        Event(int date, int time, int duration, int asset_id, String eventName, String[] format, int tcIn, int tcOut) {
             this.date = date;
             this.time = time;
             this.duration = duration;

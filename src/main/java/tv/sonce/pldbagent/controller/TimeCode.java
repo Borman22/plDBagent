@@ -1,12 +1,12 @@
 package tv.sonce.pldbagent.controller;
 
 public class TimeCode {
-    protected int TCInFrame; // в кадрах 23*90_000 + 59*1500 + 59*25 + 24
+    private int TCInFrame; // в кадрах 23*90_000 + 59*1500 + 59*25 + 24
     private String TCStr; // с разделителями ':'  "23:59:59:24"
     private int TCIntStr; // без разделителей  23595924
     private String [] TCArrayStr = {"00", "00", "00", "00"}; // массив строк {23, 59, 59, 24}
     private int [] TCArrayInt = {0, 0, 0, 0}; // массив интов {23, 59, 59, 24}
-    final int MAX_VALUE = 24*90000; //2_160_000 кадров
+    private final int MAX_VALUE = 24*90000; //2_160_000 кадров
     final int MIN_VALUE = 0;
 
     TimeCode(){
@@ -16,14 +16,14 @@ public class TimeCode {
     /**
      * Конструктор получает ТС в виде String ТОЛЬКО в таком формате (11 символов с разделителями-двоеточиями):     23:59:59:24
      */
-    TimeCode(String s){
+    private TimeCode(String s){
         setTC(s);
     }
 
     /**
      * Конструктор получает ТС в виде int 23:59:59:24, только без разделителей: 23595924
      */
-    TimeCode(int i){
+    private TimeCode(int i){
         setTC(i);
     }
 
@@ -34,7 +34,7 @@ public class TimeCode {
     /**
      * Метод получает ТС в виде int 23:59:59:24, только без разделителей: 23595924
      */
-    void setTC(int i){
+    private void setTC(int i){
         if (i < 0 && i >= 23595924){
             System.out.println("Таймкод должен быть от 0 до 23:59:59:24");
             return;
@@ -109,7 +109,6 @@ public class TimeCode {
 
     /**
      * Метод отображает ТС в виде  23:59:59:24
-     * @return
      */
 
     @Override
@@ -164,7 +163,6 @@ public class TimeCode {
 
     static int TCInFrameToIntStr(int i){
         int hh, mm, ss, ff;
-        hh = mm = ss = ff = 0;
         hh = i/90_000;
         i = i - 90_000 * hh;
         mm = i/1500;
@@ -185,12 +183,12 @@ public class TimeCode {
 
 
         if(s.length() != 11){
-            System.out.println("Таймкод должен быть в формате HH:MM:SS:FF. TC = 00:00:00:00.");
+            System.out.println("Таймкод должен быть в формате HH:MM:SS:FF. TC = 00:00:00:00. error 1" + s);
             return 0;
         }
 
         if((array[2] & array[5] & array[8]) != ':'){
-            System.out.println("Таймкод должен быть в формате HH:MM:SS:FF. TC = 00:00:00:00.");
+            System.out.println("Таймкод должен быть в формате HH:MM:SS:FF. TC = 00:00:00:00. error 2 " + s);
             return 0;
         }
 
