@@ -28,7 +28,7 @@ public class Main {
 
         try {
             DBConnector dbConnector = new DBConnector(dbHost, dbName, dbLogin, dbPassword);
-            MainController mainController = new MainController(dbConnector/*, fileAgentStorage, fileAgentInmedia*/, fileAgentD);
+            MainController mainController = new MainController(dbConnector, fileAgentStorage, fileAgentInmedia, fileAgentD);
         } catch (SQLException e) {
             System.out.println(e.getLocalizedMessage());
             if (e.getCause() != null)

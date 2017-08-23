@@ -49,7 +49,7 @@ class FileFinder {
 
 
         for (Row_file_names currentFileInDB : existingFilesInDB) {
-            if (existingFilesInDirMap.get(currentFileInDB.getFile_name())== null || currentFileInDB.getDate_create() != existingFilesInDirMap.get(currentFileInDB.getFile_name()))
+            if (existingFilesInDirMap.get(currentFileInDB.getFile_name()) == null || currentFileInDB.getDate_create() != existingFilesInDirMap.get(currentFileInDB.getFile_name()))
                 deletedFiles.add(currentFileInDB);
         }
         return deletedFiles;
@@ -65,13 +65,13 @@ class FileFinder {
         List<Row_file_names> existingFilesInDB = getExistingFilesInDirInDB(dbConnector);
 
         Map<String, Row_file_names> existingFilesInDBMap = new HashMap<>();
-        for(Row_file_names tempFile : existingFilesInDB)
+        for (Row_file_names tempFile : existingFilesInDB)
             existingFilesInDBMap.put(tempFile.getFile_name(), tempFile);
 
         List<File> newFiles = new ArrayList<>();
 
-        for(File tempFileInDir : existingFilesInDir){
-            if(existingFilesInDBMap.get(tempFileInDir.getName()) == null || tempFileInDir.lastModified() != existingFilesInDBMap.get(tempFileInDir.getName()).getDate_create()){
+        for (File tempFileInDir : existingFilesInDir) {
+            if (existingFilesInDBMap.get(tempFileInDir.getName()) == null || tempFileInDir.lastModified() != existingFilesInDBMap.get(tempFileInDir.getName()).getDate_create()) {
                 newFiles.add(tempFileInDir);
             }
         }

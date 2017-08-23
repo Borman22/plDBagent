@@ -32,21 +32,23 @@ public class DBAgentUtil {
                 formats_id[k++] = getFormatIdFromDB(currentFormat, dbConnector);
 
             // Потом получаем id из таблицы asset_id_name
-            int [] result = getAssetIdNameId(currentEvent.asset_id, currentEvent.eventName, dbConnector);
+            int[] result = getAssetIdNameId(currentEvent.asset_id, currentEvent.eventName, dbConnector);
             int asset_id_name_id = result[0];
-            int isOldAsset_id = result[1];
+            int isOldAsset_id = result[1]; // 1 - уже был такой asset_id_name_id, 0 - добавили только что
 
             int currentEventID = -1;
-            if(isOldAsset_id == 1) {
+            if (isOldAsset_id == 1) {
                 // Запрашиваем у БД инфу про конкретное событие date, time, asset_id, tcin, tcout, duration
                 currentEventID = getEventID(dbConnector, currentEvent, asset_id_name_id);
             }
 
             if (currentEventID < 0)
                 addOneEventFromNewFile(currentEvent, dbConnector, formats_id, asset_id_name_id, id_file_names);
+            else
+                continue;
 
             currentEventID = getEventID(dbConnector, currentEvent, asset_id_name_id);
-            if(currentEventID < 0) continue;
+            if (currentEventID < 0) continue;
 
             // добавляем все форматы
             for (int formatID : formats_id) {
@@ -58,7 +60,6 @@ public class DBAgentUtil {
                     System.out.println(e.getLocalizedMessage());
                 }
             }
-
         }
     }
 
@@ -83,7 +84,7 @@ public class DBAgentUtil {
         return -1;
     }
 
-    private static int [] getAssetIdNameId(int asset_id, String eventName, DBConnector dbConnector) {
+    private static int[] getAssetIdNameId(int asset_id, String eventName, DBConnector dbConnector) {
         String query = String.format("SELECT * FROM asset_id_name WHERE asset_id = \'%s\' AND name = \'%s\'", asset_id, eventName);
         ResultSet rs;
         try {
@@ -209,7 +210,7 @@ public class DBAgentUtil {
             return -1;
 
         Integer formatID = formats.get(newFormat);
-        if(formatID != null)
+        if (formatID != null)
             return formatID.intValue();
 
         String query = "INSERT INTO formats (format) VALUES (\'" + newFormat + "\')";
@@ -222,7 +223,7 @@ public class DBAgentUtil {
         refreshFormats(dbConnector); // обновляем список форматов
 
         formatID = formats.get(newFormat);
-        if(formatID != null)
+        if (formatID != null)
             return formatID.intValue();
         return -1;
     }
