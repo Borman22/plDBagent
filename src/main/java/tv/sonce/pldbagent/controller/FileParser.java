@@ -6,14 +6,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-//import java.sql.Date;  // Может дату представлять не как int, а как sql.Date
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -22,6 +21,8 @@ import org.xml.sax.SAXException;
  */
 
 class FileParser {
+
+    private static final Logger LOGGER = Logger.getLogger(FileParser.class);
 
     List<Event> parse(File file) {
         // 1. Валидация файла
@@ -37,8 +38,7 @@ class FileParser {
             doc = db.parse(file); // строитель построил документ
             nodeListSchedule = doc.getElementsByTagName("event"); // получаем все Event из родительского Schedule
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            System.out.println("Не получилось распарсить XML ");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не получилось распарсить XML ", e);
             return null;
         }
         if(!doc.getDocumentElement().getNodeName().equals("CobaltAsRun"))

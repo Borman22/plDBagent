@@ -3,11 +3,14 @@ package tv.sonce.pldbagent.model;
  * Этот класс инкапсулирует в себе БД и операции для получения к ней доступа
  */
 
-import java.io.File;
+import org.apache.log4j.Logger;
+
 import java.sql.*;
-import java.util.Map;
 
 public class DBConnector {
+
+    private static final Logger LOGGER = Logger.getLogger(DBConnector.class);
+
     private Connection connection = null;
     private Statement statement = null;
     private String settings = "?serverTimezone=UTC&useSSL=false";
@@ -25,7 +28,7 @@ public class DBConnector {
             throw new SQLException("ОШИБКА! Не подключен SQL драйвер JDBC!", e);
         }
 
-        connection = DriverManager.getConnection(hostPort + dbName + settings,login, password);
+        connection = DriverManager.getConnection(hostPort + dbName + settings, login, password);
         if ((connection == null) || (connection.isClosed()))
             throw new SQLException("Не удалось подключитсья к базе данных");
         statement = connection.createStatement();
@@ -50,19 +53,17 @@ public class DBConnector {
     }
 
 
-
-    public void close(){
+    public void close() {
         if (isConnected())
             try {
                 connection.close();
             } catch (SQLException e) {
-                System.out.println("Не удалось закрыть соединение с БД");
-                System.out.println(e.getLocalizedMessage());
+                LOGGER.error("Не удалось закрыть соединение с БД", e);
             }
     }
 
     protected void finalize() {
-        if(this.isConnected())
+        if (this.isConnected())
             close();
     }
 }

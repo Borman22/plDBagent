@@ -4,6 +4,8 @@ package tv.sonce.pldbagent.controller;
  * добавляет это событие в БД, так же занимается выборкой из БД
  */
 
+import org.apache.log4j.Logger;
+import sun.rmi.runtime.Log;
 import tv.sonce.pldbagent.model.DBConnector;
 import tv.sonce.pldbagent.model.FileAgent;
 
@@ -16,6 +18,7 @@ import java.util.Map;
 
 public class DBAgentUtil {
 
+    private static final Logger LOGGER = Logger.getLogger(DBAgentUtil.class);
     private static Map<String, Integer> formats = null;
 
     static void addAllEventsFromNewFile(List<FileParser.Event> parseredFile, DBConnector dbConnector, int id_file_names) {
@@ -56,8 +59,7 @@ public class DBAgentUtil {
                 try {
                     dbConnector.executeUpdate(query);
                 } catch (SQLException e) {
-                    System.out.println("Не удалось добавить запись в таблицу formats_in_event");
-                    System.out.println(e.getLocalizedMessage());
+                    LOGGER.error("Не удалось добавить запись в таблицу formats_in_event", e);
                 }
             }
         }
@@ -72,14 +74,13 @@ public class DBAgentUtil {
         try {
             rs = dbConnector.executeQuery(query);
         } catch (SQLException e) {
-            System.out.println("Не удалось выполнить запрос к БД  " + query);
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось выполнить запрос к БД  " + query, e);
         }
         try {
             if (rs != null && rs.next())
                 return rs.getInt("id");
         } catch (SQLException e) {
-            System.out.println("Не удалось сделать ResultSet.next()");
+            LOGGER.error("Не удалось сделать ResultSet.next()", e);
         }
         return -1;
     }
@@ -90,8 +91,7 @@ public class DBAgentUtil {
         try {
             rs = dbConnector.executeQuery(query);
         } catch (SQLException e) {
-            System.out.println("Не удалось с БД получить asset_id, name");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось с БД получить asset_id, name", e);
             return new int[]{-1, 1};
         }
 
@@ -102,8 +102,7 @@ public class DBAgentUtil {
                 return new int[]{rs.getInt("id"), 1};
             }
         } catch (SQLException e) {
-            System.out.println("Не удалось выполнить rs.next(), когда хотели получить asset_id для файла " + eventName + " с asset_id = " + asset_id);
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось выполнить rs.next(), когда хотели получить asset_id для файла " + eventName + " с asset_id = " + asset_id, e);
             return new int[]{-1, 1};
         }
 
@@ -111,15 +110,13 @@ public class DBAgentUtil {
         try {
             dbConnector.executeUpdate(queryInsert);
         } catch (SQLException e) {
-            System.out.println("Не удалось добавить в БД asset_id and name");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось добавить в БД asset_id and name", e);
             return new int[]{-1, 0};
         }
         try {
             rs = dbConnector.executeQuery(query);
         } catch (SQLException e) {
-            System.out.println("Не удалось с БД получить asset_id, name");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось добавить в БД asset_id and name", e);
             return new int[]{-1, 0};
         }
 
@@ -130,8 +127,7 @@ public class DBAgentUtil {
                 return new int[]{rs.getInt("id"), 0};
             }
         } catch (SQLException e) {
-            System.out.println("Не удалось выполнить rs.next(), когда хотели получить asset_id для файла " + eventName + " с asset_id = " + asset_id);
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось выполнить rs.next(), когда хотели получить asset_id для файла " + eventName + " с asset_id = " + asset_id, e);
         }
         return new int[]{-1, 0};
     }
@@ -143,8 +139,7 @@ public class DBAgentUtil {
         try {
             dbConnector.executeUpdate(query);
         } catch (SQLException e) {
-            System.out.println("Не удалось добавить новый event в БД (DBAgentUtil.addOneEventFromNewFile) " + query);
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось добавить новый event в БД (DBAgentUtil.addOneEventFromNewFile) " + query, e);
         }
     }
 
@@ -161,8 +156,7 @@ public class DBAgentUtil {
         try {
             dbConnector.executeUpdate(query);
         } catch (SQLException e) {
-            System.out.println("Не удалось в БД добавить файл " + fileAgent.getPathToDir() + originFile.getName());
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось в БД добавить файл " + fileAgent.getPathToDir() + originFile.getName() + " query = " + query, e);
         }
 
         return getFileID(originFile, dbConnector, id_path);
@@ -175,8 +169,7 @@ public class DBAgentUtil {
                 return rs.getInt("id");
             }
         } catch (SQLException e) {
-            System.out.println("Не удалось получить из БД id данного файла " + originFile.getName());
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось получить из БД id данного файла " + originFile.getName(), e);
         }
         return -1;
     }
@@ -187,8 +180,7 @@ public class DBAgentUtil {
         try {
             rs = dbConnector.executeQuery("SELECT * FROM formats");
         } catch (SQLException e) {
-            System.out.println("Не удалось получить список форматов из БД");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось получить список форматов из БД", e);
             return;
         }
         if (rs == null) return;
@@ -198,8 +190,7 @@ public class DBAgentUtil {
                 formats.put(rs.getString("format"), rs.getInt("id"));
             }
         } catch (SQLException e) {
-            System.out.println("Не получилось выполнить rs.next(), когда хотели получить список всех форматов из БД");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не получилось выполнить rs.next(), когда хотели получить список всех форматов из БД", e);
         }
     }
 
@@ -217,8 +208,7 @@ public class DBAgentUtil {
         try {
             dbConnector.executeUpdate(query);
         } catch (SQLException e) {
-            System.out.println("Не удалось добавить новый формат " + newFormat + " в БД" + query);
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось добавить новый формат " + newFormat + " в БД" + query, e);
         }
         refreshFormats(dbConnector); // обновляем список форматов
 

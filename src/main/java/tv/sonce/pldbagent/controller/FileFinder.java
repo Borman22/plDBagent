@@ -1,5 +1,6 @@
 package tv.sonce.pldbagent.controller;
 
+import org.apache.log4j.Logger;
 import tv.sonce.pldbagent.model.DBConnector;
 import tv.sonce.pldbagent.model.FileAgent;
 import tv.sonce.pldbagent.model.tables.Row_file_names;
@@ -17,6 +18,8 @@ import java.util.Map;
  */
 
 class FileFinder {
+
+    private static final Logger LOGGER = Logger.getLogger(FileFinder.class);
 
     private File[] existingFilesInDir;
     private Map<String, Long> existingFilesInDirMap;
@@ -103,8 +106,7 @@ class FileFinder {
         try {
             rs = dbConnector.executeQuery(query);
         } catch (SQLException e) {
-            System.out.println("Не удалось получить данные из БД");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось получить данные из БД", e);
         }
         if (rs == null) return null;
 
@@ -127,8 +129,7 @@ class FileFinder {
             }
             return table_file_names;
         } catch (SQLException e) {
-            System.out.println("Не получилось прочитать данные из ResultSet");
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не получилось прочитать данные из ResultSet", e);
         }
 
         return null;

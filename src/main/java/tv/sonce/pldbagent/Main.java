@@ -3,6 +3,7 @@ package tv.sonce.pldbagent;
  * Этот класс запускает программу и инициализирует все классы.
  */
 
+import org.apache.log4j.Logger;
 import tv.sonce.pldbagent.controller.MainController;
 import tv.sonce.pldbagent.model.DBConnector;
 import tv.sonce.pldbagent.model.FileAgent;
@@ -10,6 +11,8 @@ import tv.sonce.pldbagent.model.FileAgent;
 import java.sql.SQLException;
 
 public class Main {
+    private static final Logger LOGGER = Logger.getLogger(Main.class);
+
     private static String pathToStorage = "\\\\storage\\Solarmedia\\pl_lists\\"; // пути к дерикториям, где лежат плейлисты
     private static String pathToD = "d:\\Borman\\pl_lists\\";
     private static String pathToInmedia = "\\\\inmedia\\AsRunLogs\\";
@@ -22,17 +25,23 @@ public class Main {
 
     public static void main(String[] args) {
         currentDate = System.currentTimeMillis();
+
         FileAgent fileAgentStorage = new FileAgent(pathToStorage);
         FileAgent fileAgentInmedia = new FileAgent(pathToInmedia);
         FileAgent fileAgentD = new FileAgent(pathToD);
 
         try {
+            LOGGER.info(String.format("Создаем экземпляр DBConnector с параметрами: dbHost = %s, dbName = %s, dbLogin = %s, dbPassword = %s", dbHost, dbName, dbLogin, dbPassword));
             DBConnector dbConnector = new DBConnector(dbHost, dbName, dbLogin, dbPassword);
-            MainController mainController = new MainController(dbConnector, fileAgentStorage, fileAgentInmedia, fileAgentD);
+            LOGGER.debug("Экземпляр DBConnector создался. dbConnector = " + dbConnector);
+
+            LOGGER.info(String.format("Создаем экземпляр MainController с параметрами dbConnector = %s, fileAgentStorage = %s, fileAgentInmedia = %s, fileAgentD = %s", dbConnector, fileAgentStorage, fileAgentInmedia, fileAgentD));
+            MainController mainController = new MainController(dbConnector/*, fileAgentStorage, fileAgentInmedia*/, fileAgentD);
         } catch (SQLException e) {
-            System.out.println(e.getLocalizedMessage());
+            LOGGER.error("Не удалось установить соединение с БД. ", e);
             if (e.getCause() != null)
-                System.out.println(e.getCause().getLocalizedMessage());
+                LOGGER.error("Причина: " + e.getCause().getLocalizedMessage());
         }
+        LOGGER.trace("Завершается работа программы.");
     }
 }
