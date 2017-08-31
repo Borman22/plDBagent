@@ -73,6 +73,7 @@ public class MainController {
                     if (id_file_names < 0) {
                         LOGGER.error("Не удалось найти в БД такой файл и не удалось его туда добавить: " + newFile.getName());
                     }
+                    System.out.println("Добавляется файл номер   " + id_file_names);
 
                     List<FileParser.Event> parseredFile = fileParser.parse(newFile);
                     if (parseredFile == null) // Не удалось распарсить или формат не .xml
